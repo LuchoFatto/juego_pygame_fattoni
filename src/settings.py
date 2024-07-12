@@ -1,41 +1,71 @@
 from random import randint
 
+#Pantalla
 WIDTH = 800
 HEIGHT = 600
 SIZE_SCREEN = (WIDTH, HEIGHT)
 MID_WIDTH_SCREEN = WIDTH // 2
 MID_HEIGHT_SCREEN = HEIGHT // 2
 
+PATH_JSON = "./src/memoria/"
+PATH_CSV = "./src/memoria/"
+
+#Rango salida bonus
+MIN_WIDTH_SALIDA_B = 45
+MAX_WIDTH_SALIDA_B = 710
+
+MIN_HEIGHT_SALIDA_B = 45
+MAX_HEIGHT_SALIDA_B = 510
+
+#Tamaño bonus
+BONUS_W = 37
+BONUS_H = 37
+
+#Rango de salida de los enemigos
 MIN_WIDTH_SALIDA = 350
 MAX_WIDTH_SALIDA = 500
 
 MIN_HEIGHT_SALIDA = 265
 MAX_HEIGHT_SALIDA = 330
 
+#Dimensiones player
+PLAYER_W = 40
+PLAYER_H = 40
+
 #Dimensiones enemigo
 ENEMY_W = 37
 ENEMY_H = 37
 
+#Caracteristicas de las balas
+BALA_W = 6
+BALA_H = 6
+BALA_SPEED = 10
+
+#Lugar random donde aparecen los enemigos dentro de los rangos de salida 
 spawn = {1: ((800 - ENEMY_H),(randint(MIN_HEIGHT_SALIDA, MAX_HEIGHT_SALIDA - ENEMY_W))),
         2: (0,(randint(MIN_HEIGHT_SALIDA, MAX_HEIGHT_SALIDA - ENEMY_W))),
         3: ((randint(MIN_WIDTH_SALIDA, MAX_WIDTH_SALIDA - ENEMY_W), 0)),
         4: ((randint(MIN_WIDTH_SALIDA, MAX_WIDTH_SALIDA - ENEMY_W), 600 - ENEMY_H))}
 
+INITIALS_ENEMYS = 6
+
 CENTER_SCREEN = (MID_WIDTH_SCREEN, HEIGHT // 2)
 ORIGIN = (0, 0)
-START_BUTTON_SIZE = (200, 200)
+BUTTON_SIZE = (80, 80)
 
-POS_SCORE = (MID_WIDTH_SCREEN, 50)
-POS_LAST_SCORE = (150, 50)
+POS_OLEADAS = (730, 20)
+POS_VIDAS = (70, 20)
+
+POS_START = (MID_WIDTH_SCREEN, 350)
+POS_EXIT = (MID_WIDTH_SCREEN, 450)
 POS_HIGH_SCORE = (WIDTH - 150, 50)
 POS_TITLE = (MID_WIDTH_SCREEN, 50)
 POS_MUTE = (50, HEIGHT - 50)
 
 FPS = 60
 
-SPEED = 5
-
-INITIALS_ENEMYS = 6
+SPEED = 4
+TIME_SPEED_UP = 4000
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -46,20 +76,8 @@ CYAN = (0, 255, 255)
 YELLOW = (255, 255, 0)
 MAGENTA = (255, 0, 255)
 GREY = (127, 127, 127)
-
 CUSTOM = (182, 221, 38)
 
 COLORS = [RED, GREEN, BLUE, WHITE, BLACK, CYAN, YELLOW, MAGENTA, GREY]
 
-#dimensiones player
-PLAYER_W = 40
-PLAYER_H = 40
-
-min_speed_y_coin = 3
-max_speed_y_coin = 7
-
-BALA_W = 6
-BALA_H = 6
-BALA_SPEED = 10
-
-TIME_GAME = 15000
+TIME_BONUS = randint(15000, 35000)

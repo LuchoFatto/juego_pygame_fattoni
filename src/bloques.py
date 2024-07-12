@@ -25,3 +25,18 @@ def create_laser(midBottom:tuple[int, int], direction:str, color:tuple[int, int,
 def load_enemy_list(lista: list, cant_enemys: int, imagen: pygame.Surface = None):
     for _ in range(cant_enemys):
         lista.append(create_enemy(imagen))
+
+
+def crear_bonus(img: pygame.Surface) -> dict:
+    """
+    Crea un bloque que representa un bono con la imagen y velocidad proporcionadas.
+
+    Args:
+        img (pygame.Surface): La imagen que se usará para el bono.
+        speed (int): La velocidad del bono en el eje y.
+
+    Returns:
+        dict: Un diccionario que representa el bonus creado.
+    """
+    block = create_block(img, randint(MIN_WIDTH_SALIDA_B, MAX_WIDTH_SALIDA_B - BONUS_W), randint(MIN_HEIGHT_SALIDA_B, MAX_HEIGHT_SALIDA_B - BONUS_H), BONUS_W, BONUS_H, YELLOW, 0, 0, 0)
+    return block
