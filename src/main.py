@@ -3,13 +3,14 @@ from settings import *
 from random import randint
 from bloques import *
 from colisiones import *
-from estructura import *
+from interaccion import *
 from pygame.locals import *
 
 pygame.init()
 
-#Fuente
+#Fuentes
 fuente = pygame.font.Font("./src/assets/fonts/dash-horizon.otf", 32)
+funete_final = pygame.font.Font("./src/assets/fonts/dash-horizon.otf", 65)
 
 #Imagenes
 imagen_de_fondo = pygame.transform.scale(pygame.image.load("./src/assets/images/imagen_de_fondo.png"), SIZE_SCREEN)
@@ -26,8 +27,9 @@ disparo = pygame.mixer.Sound("./src/assets/sounds/disparo.wav")
 impacto_enemigo =pygame.mixer.Sound("./src/assets/sounds/impacto.ogg")
 game_over = pygame.mixer.Sound("./src/assets/sounds/game_over.wav")
 hit_live = pygame.mixer.Sound("./src/assets/sounds/hit.wav")
+sonido_bonus = pygame.mixer.Sound("./src/assets/sounds/sonido_bonus.wav")
 
-#Musica fondo
+#Musica de fondo
 pygame.mixer.music.load("./src/assets/music/musica_fondo.wav")
 
 #Volumen
@@ -44,10 +46,6 @@ pygame.display.set_caption("Viaje del Rey de la Pradera")
 pygame.display.set_icon(pygame.image.load("./src/assets/images/icono.png") )
 
 while True:
-    config = cargar_json("config")
-    playing_music = config[0]["mute"]
-    records = cargar_csv("records")
-
     #Pantalla de inicio
     SCREEN.blit(imagen_fondo_inicio, ORIGIN)
     rect_start_button = start_button.get_rect(center= POS_START)
@@ -56,7 +54,6 @@ while True:
     SCREEN.blit(exit_button, rect_exit_button)
     pygame.display.flip()
     esperar_click_jugador(rect_start_button, rect_exit_button)
-
 
     #Jugador
     player = create_player(personaje)
@@ -71,7 +68,7 @@ while True:
     move_up = False
     move_down = False
 
-    # Puntajes y bonus
+    #Puntajes y bonus
     lives = 3
     velocidad_arriba = None
     vida = None
@@ -96,11 +93,14 @@ while True:
     flag_no_enemies = False
     wave_start_time = 0
 
-    #Musica
-    pygame.mixer.music.play(-1)
-    playing_music = True
+    config = cargar_json("config")
+    playing_music = config[0]["mute"]
 
     while is_running:
+        pygame.mouse.set_visible(False)
+        #Verifica si la musica esta sonando o no
+        if not pygame.mixer.music.get_busy() and playing_music:
+            pygame.mixer.music.play(loops=-1)
         #Frames
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -129,17 +129,16 @@ while True:
                     playing_music = not playing_music
                 if event.key == K_UP:
                     disparo.play()
-                    bullet = bullets.append(create_laser(player["rect"].midtop, "up"))
+                    bullet = bullets.append(create_bullet(player["rect"].midtop, "up"))
                 elif event.key == K_DOWN:
                     disparo.play()
-                    bullet = bullets.append(create_laser(player["rect"].midbottom, "down"))
+                    bullet = bullets.append(create_bullet(player["rect"].midbottom, "down"))
                 elif event.key == K_LEFT:
                     disparo.play()
-                    bullet = bullets.append(create_laser(player["rect"].midleft, "left"))
+                    bullet = bullets.append(create_bullet(player["rect"].midleft, "left"))
                 elif event.key == K_RIGHT:
                     disparo.play()
-                    bullet = bullets.append(create_laser(player["rect"].midright, "right"))
-            
+                    bullet = bullets.append(create_bullet(player["rect"].midright, "right"))
             #Detecta cuando se deja de presionar una tecla
             if event.type == KEYUP:
                 if event.key == K_s:
@@ -152,15 +151,15 @@ while True:
                     move_right = False
             
             if event.type == GENERAR_BONUS:
-                opcion = 2
+                opcion = randint(1, 2)
                 if opcion == 1:
                     vida = crear_bonus(vida_extra)
                 else:
                     velocidad_arriba = crear_bonus(speed_up)
 
-        # actiualizar elementos
+        # Actiualizar elementos
 
-        #muevo el personaje segun sus direcciones y hago tope en los arbustos
+        #Muevo el personaje segun sus direcciones y hago tope en los arbustos
         if move_left and player["rect"].left > 0:
             player["rect"].x -= SPEED
             if player["rect"].left < 45:
@@ -210,11 +209,11 @@ while True:
             elif bullet["direction"] == "down":
                 bullet["rect"].y += bullet["speed"]
 
-        # Destruir la bala si sale de la pantalla
+        #Destruir la bala si sale de la pantalla
             if bullet["rect"].right < 0 or bullet["rect"].left > WIDTH or bullet["rect"].bottom < 0 or bullet["rect"].top > HEIGHT:
                 bullets.remove(bullet)
 
-        # Detectar colisiones entre balas y enemigos
+        #Detectar colisiones entre balas y enemigos
         for enemy in enemies[:]:
             for bullet in bullets[:]:
                 if bullet:
@@ -226,6 +225,7 @@ while True:
                             wave_start_time = pygame.time.get_ticks()
                             flag_no_enemies = True
 
+        #Temporizador de oleadas
         if flag_no_enemies:
             if pygame.time.get_ticks() - wave_start_time >= 3000:
                 oleada += 1
@@ -243,6 +243,7 @@ while True:
                     enemies_spawned += 1
                     enemy_spawn_timer = 30
 
+        #Detectar colision entre personaje y enemigo
         for enemy in enemies[:]:
             if dectectar_colision_circulos(player["rect"], enemy["rect"]):
                 enemies.remove(enemy)
@@ -252,16 +253,20 @@ while True:
                     game_over.play()
                     is_running = False
 
+        #Condicionales de bonus
         if vida:
             if detectar_colision(vida["rect"], player["rect"]):
+                sonido_bonus.play()
                 lives += 1
                 vida = None
         
         if velocidad_arriba:
             if detectar_colision(velocidad_arriba["rect"],player["rect"]):
+                sonido_bonus.play()
                 start_time_speed_up = pygame.time.get_ticks()
                 SPEED += 1
 
+        #Temporizador de velocidad aumentada
         if start_time_speed_up and pygame.time.get_ticks() - start_time_speed_up <= TIME_SPEED_UP:
             velocidad_arriba = None
             SPEED = 4
@@ -271,59 +276,54 @@ while True:
         min_transcurridos = int(tiempo_transcurrido // 60)
         seg_transcurridos = int(tiempo_transcurrido % 60)
         tiempo = f"{min_transcurridos:02}:{seg_transcurridos:02}"
+
         # Dibujar pantalla, mostrar enemigos y balas, etc.
 
         #Dibujar pantalla
         SCREEN.blit(imagen_de_fondo, ORIGIN)
         SCREEN.blit(player["img"], player["rect"])
-        
+
         #Muestro enemigos
         for enemy in enemies:
             SCREEN.blit(enemy["img"], enemy["rect"])
-        
+
+        #Muestro MUTE
+        if not playing_music:
+            mostrar_texto(SCREEN, POS_MUTE, f"Mute", fuente, WHITE, BLACK)
+
         #Muestro balas
         for bullet in bullets:
             pygame.draw.rect(SCREEN, bullet["color"], bullet["rect"])
 
+        #Muestro bonus
         if vida:
             SCREEN.blit(vida["img"], vida["rect"])
 
         if velocidad_arriba:
             SCREEN.blit(velocidad_arriba["img"], velocidad_arriba["rect"])
 
+        #Muestro contadores de oleadas y vida
         mostrar_texto(SCREEN, POS_OLEADAS, f"Oleada: {oleada}", fuente, WHITE, BLACK)
         mostrar_texto(SCREEN, POS_VIDAS, f"Lives: {lives}", fuente, WHITE, BLACK)
-        #Actualizar pantalla
+
+        # Actualizar pantalla
         pygame.display.flip()
+    # Pantalla de game over, mostrar records, puntuacion, guardado de archivos, etc.
+    records = cargar_csv("records")
     config[0]["mute"] = playing_music
     guardar_json("config", config)
-    new_record = {"puesto":None, "oleada":oleada, "tiempo":tiempo}
+    new_record = {"oleada":oleada, "tiempo":tiempo}
     records.append(new_record)
-    #orden_lista(lambda rec_uno,rec_dos: int(rec_uno["tiempo"].replace(":", "")) < int(rec_dos["tiempo"].replace(":", "")),records)
+    orden_lista(lambda rec_uno,rec_dos: int(rec_uno["oleada"]) < int(rec_dos["oleada"]), records)
+    records.pop() #elimina el ultimo de la lista
+    guardar_csv("records",records)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    pygame.mixer.music.stop()
+    SCREEN.fill(BLACK)
+    mostrar_texto(SCREEN, POS_TITLE,"GAME OVER", funete_final, BLUE)
+    mostrar_texto(SCREEN, CENTER_OLEADA, f"OLEADA: {new_record["oleada"]}", fuente, WHITE)
+    mostrar_texto(SCREEN, CENTER_TIME, f"TIEMPO: {new_record["tiempo"]}", fuente, WHITE)
+    mostrar_texto(SCREEN, POSITION_PRESS_SPACE,"Presionar ESC para salir o ESPACIO para reiniciar", fuente, WHITE)
+    mostrar_records(records, SCREEN, fuente)
+    pygame.display.flip()
+    wait_user(K_SPACE,K_ESCAPE)
